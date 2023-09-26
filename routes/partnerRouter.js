@@ -1,21 +1,20 @@
 const express = require('express');
 const partnerRouter = express.Router(); //create a new Express router object named partnerRouter
 
+const Partner = require('../models/partner'); //import the Partner model
+
 partnerRouter.route('/') //chain all the routing methods together on the partnerRouter object
 
-.all((req, res, next) => {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/plain');
-    next(); //passes control of the application routing to the next relevant routing method after this one
+.get((req, res, next) => {
+    Partner.find() //find all documents in the Partner collection
+    .then(partners => res.status(200).json(partners)) // simplified version of the code in campsiteRouter.js
+    .catch(err => next(err)); //dont forget to pass the error to the overall error handler in app.js
 })
 
-.get((req, res) => {
-    res.end('Will send all the partners to you');
-
-})
-
-.post((req, res) => {
-    res.end(`Will add the partner: ${req.body.name} with description: ${req.body.description}`);
+.post((req, res, next) => {
+    Partner.create(req.body) //create a new document in the Partner collection
+    .then(partner => res.status(200).json(partner)) 
+    .catch(err => next(err));
 })
 
 .put((req, res) => {
@@ -23,28 +22,32 @@ partnerRouter.route('/') //chain all the routing methods together on the partner
     res.end('PUT operation not supported on /partners');
 })
 
-.delete((req, res) => {
-    res.end('Deleting all partners');
-}); //delete ALL partners
+.delete((req, res, next) => {
+    Partner.deleteMany() //Delete all documents in the Partner collection
+    .then(partners => res.status(200).json(partners)) // simplified version of the code in campsiteRouter.js
+    .catch(err => next(err)); //dont forget to pass the error to the overall error handler in app.jses.end('Deleting all partners');
+}); 
 
-partnerRouter.route('/:partnerId') //chain all the routing methods together on the partnerRouter object
-.all((req, res, next) => {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/plain');
-    next(); //passes control of the application routing to the next relevant routing method after this one  
-})
-.get((req, res) => {
-    res.end(`The partner id is: ${req.params.partnerId}`);
+partnerRouter.route('/:partnerId') 
+.get((req, res, next) => {
+    Partner.findById(req.params.partnerId) //find the ID thats stored int he params                                                                  
+    .then(partner => res.status(200).json(partner)) // simplified version of the code in campsiteRouter.js
+    .catch(err => next(err)); 
 })
 .post((req, res) => {
     res.statusCode = 403;
     res.end(`POST operation not supported`);
 })
-.put((req, res) => {
-    res.end(`Will update the partner id: ${req.params.partnerId} with description: ${req.body.description}`);
+.put((req, res, next) => {
+    Partner.findByIdAndUpdate(req.params.partnerId, req.body, { new: true }) // use new: true to get the new record back and not the old one 
+    .then(partner => res.status(200).json(partner))
+    .catch(err => next(err));
 })
-.delete((req, res) => {
-    res.end(`Deleting partner id: ${req.params.partnerId}`);
+
+.delete((req, res, next) => {
+    Partner.findByIdAndDelete(req.params.partnerId) //find the ID thats stored in the params and delete it
+    .then(partner => res.status(200).json(partner)) 
+    .catch(err => next(err)); 
 });
 
-module.exports = partnerRouter; //export the router object so it can be used in other files
+module.exports = partnerRouter; 

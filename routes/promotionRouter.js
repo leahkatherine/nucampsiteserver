@@ -1,21 +1,20 @@
 const express = require('express');
 const promotionRouter = express.Router(); //create a new Express router object named promotionRouter
 
+const Promotion = require('../models/promotion'); //import the Promotion model
+
 promotionRouter.route('/') //chain all the routing methods together on the promotionRouter object
 
-.all((req, res, next) => {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/plain');
-    next(); //passes control of the application routing to the next relevant routing method after this one
+.get((req, res, next) => {
+    Promotion.find() //find all documents in the Promotion collection
+    .then(promotions => res.status(200).json(promotions)) // simplified version of the code in campsiteRouter.js
+    .catch(err => next(err)); //dont forget to pass the error to the overall error handler in app.js
 })
 
-.get((req, res) => {
-    res.end('Will send all the promotions to you');
-
-})
-
-.post((req, res) => {
-    res.end(`Will add the promotion: ${req.body.name} with description: ${req.body.description}`);
+.post((req, res, next) => {
+    Promotion.create(req.body) //create a new document in the Promotion collection
+    .then(promotion => res.status(200).json(promotion)) 
+    .catch(err => next(err));
 })
 
 .put((req, res) => {
@@ -23,28 +22,32 @@ promotionRouter.route('/') //chain all the routing methods together on the promo
     res.end('PUT operation not supported on /promotions');
 })
 
-.delete((req, res) => {
-    res.end('Deleting all promotions');
-}); //delete ALL promotions
+.delete((req, res, next) => {
+    Promotion.deleteMany() //Delete all documents in the Promotion collection
+    .then(promotions => res.status(200).json(promotions)) // simplified version of the code in campsiteRouter.js
+    .catch(err => next(err)); //dont forget to pass the error to the overall error handler in app.jses.end('Deleting all promotions');
+}); 
 
-promotionRouter.route('/:promotionId') //chain all the routing methods together on the promotionRouter object
-.all((req, res, next) => {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/plain');
-    next(); //passes control of the application routing to the next relevant routing method after this one  
-})
-.get((req, res) => {
-    res.end(`The promotion id is: ${req.params.promotionId}`);
+promotionRouter.route('/:promotionId') 
+.get((req, res, next) => {
+    Promotion.findById(req.params.promotionId) //find the ID thats stored int he params                                                                  
+    .then(promotion => res.status(200).json(promotion)) // simplified version of the code in campsiteRouter.js
+    .catch(err => next(err)); 
 })
 .post((req, res) => {
     res.statusCode = 403;
     res.end(`POST operation not supported`);
 })
-.put((req, res) => {
-    res.end(`Will update the promotion id: ${req.params.promotionId} with description: ${req.body.description}`);
+.put((req, res, next) => {
+    Promotion.findByIdAndUpdate(req.params.promotionId, req.body, { new: true }) // use new: true to get the new record back and not the old one 
+    .then(promotion => res.status(200).json(promotion))
+    .catch(err => next(err));
 })
-.delete((req, res) => {
-    res.end(`Deleting promotion id: ${req.params.promotionId}`);
+
+.delete((req, res, next) => {
+    Promotion.findByIdAndDelete(req.params.promotionId) //find the ID thats stored in the params and delete it
+    .then(promotion => res.status(200).json(promotion)) 
+    .catch(err => next(err)); 
 });
 
-module.exports = promotionRouter; //export the router object so it can be used in other files
+module.exports = promotionRouter; 
